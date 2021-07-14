@@ -1,3 +1,4 @@
+const { resolvePlugin } = require('@babel/core');
 const { Comment, Pizza } = require('../models');
 
 const commentController = {
@@ -12,6 +13,23 @@ const commentController = {
           { new: true }
         );
       })
+      .then(dbPizzaData => {
+        if (!dbPizzaData) {
+          res.status(404).json({ message: 'No pizza found with this id!' });
+          return;
+        }
+        res.json(dbPizzaData);
+      })
+      .catch(err => res.json(err));
+  },
+
+  //add reply
+  addReply({ params, body }, res) {
+    Comment.findOneAndUpdate(
+      { _id: params.commentId },
+      { $push: { replies: body } },
+      { new: true }
+    )
       .then(dbPizzaData => {
         if (!dbPizzaData) {
           res.status(404).json({ message: 'No pizza found with this id!' });
@@ -43,7 +61,21 @@ const commentController = {
         res.json(dbPizzaData);
       })
       .catch(err => res.json(err));
-  }
+  },
+
+  //remove reply
+  removeReply({ params }, res) {
+    Comment.findOneAndDelete(
+      { _id: params.commentId },
+      { $pull: { replies: {replyID: params.replyID } } },
+      { new: true }
+    )
+    .then(dbPizzaData => res.json(dbPizzaData))
+    .catch(err => res.json(err));
+}
 };
+
+
+
 
 module.exports = commentController;
